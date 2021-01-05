@@ -1,4 +1,4 @@
-import React, { FormEvent, useRef, useState } from 'react';
+import React, { FormEvent, useEffect, useRef, useState } from 'react';
 import { Button, Col, Container, Form, Row } from 'react-bootstrap';
 
 const readFileAsArrayBuffer = (file: File): Promise<ArrayBuffer> => {
@@ -131,7 +131,14 @@ const calcLRA = (pcmDataL: Float32Array, pcmDataR: Float32Array, samplingRate: n
 const App: React.FC = () => {
   const [fileData, setFileData] = useState<File | null>(null);
   const [lra, setLRA] = useState('');
+  const [loadingFlg, setLoadingFlg] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (lra !== '') {
+      setLoadingFlg(false);
+    }
+  }, [lra]);
 
   const readFile = (e: FormEvent<HTMLInputElement>) => {
     e.preventDefault();
@@ -145,6 +152,8 @@ const App: React.FC = () => {
       return;
     }
     setFileData(file);
+    setLoadingFlg(false);
+    setLRA('');
   };
 
   const startAnalysis = async () => {
@@ -152,6 +161,8 @@ const App: React.FC = () => {
     if (fileData === null) {
       return;
     }
+    setLoadingFlg(true);
+    setLRA('');
     // ファイルを読み込む
     const arrayBuffer = await readFileAsArrayBuffer(fileData);
     // オーディオデータとしてパースする
@@ -167,13 +178,22 @@ const App: React.FC = () => {
       </Col>
     </Row>
     <Row className="my-3">
+      <Col className="text-center">
+        <a href="https://github.com/YSRKEN/lra_calculator/tree/develop">GitHub</a>
+        <span>　</span>
+        <a href="https://twitter.com/YSRKEN">作者のTwitter</a>
+      </Col>
+    </Row>
+    <Row className="my-3">
       <Col sm={6} className="mx-auto">
         <Form>
           <Form.Group>
             <Form.File ref={fileInput} label="音楽ファイルを選択してください。" onChange={readFile} />
           </Form.Group>
           <Form.Group>
-            <Button disabled={fileData === null} onClick={startAnalysis}>解析開始</Button>
+            <Button disabled={fileData === null || loadingFlg} onClick={startAnalysis}>
+              {loadingFlg ? '計算中...' : '計算開始'}
+            </Button>
           </Form.Group>
           <Form.Group>
             <Form.Label>{lra}</Form.Label>
