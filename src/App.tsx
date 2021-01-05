@@ -1,6 +1,32 @@
 import React, { FormEvent, useRef, useState } from 'react';
 import { Button, Col, Container, Form, Row } from 'react-bootstrap';
 
+const readFileAsArrayBuffer = (file: File): Promise<ArrayBuffer> => {
+  return new Promise((res, rej) => {
+    const reader = new FileReader();
+    reader.addEventListener('load', () => {
+      const result = reader.result;
+      if (result === null) {
+        rej(new Error('ファイルが読み込めませんでした。'));
+      } else if (typeof result === 'string') {
+        rej(new Error('ファイル形式に誤りがあります。'));
+      } else {
+        res(result);
+      }
+    }, false);
+    reader.readAsArrayBuffer(file);
+  });
+};
+
+const decodeAudioFromArrayBuffer = (arrayBuffer: ArrayBuffer): Promise<AudioBuffer> => {
+  return new Promise((res) => {
+    const audioContext = new AudioContext();
+    audioContext.decodeAudioData(arrayBuffer, (decodedData) => {
+      res(decodedData);
+    });
+  });
+};
+
 const App: React.FC = () => {
   const [fileData, setFileData] = useState<File | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -19,21 +45,16 @@ const App: React.FC = () => {
     setFileData(file);
   };
 
-  const startAnalysis = () => {
-    if (fileData !== null) {
-      // 音楽ファイルを読み込む
-      const reader = new FileReader();
-      reader.addEventListener('load', () => {
-        const result = reader.result;
-        if (result !== null && typeof result !== 'string') {
-          const audioContext = new AudioContext();
-          audioContext.decodeAudioData(result, (decodedData) => {
-            console.log(decodedData);
-          });
-        }
-      }, false);
-      reader.readAsArrayBuffer(fileData);
+  const startAnalysis = async () => {
+    // ファイル未選択時は何もしない
+    if (fileData === null) {
+      return;
     }
+    // ファイルを読み込む
+    const arrayBuffer = await readFileAsArrayBuffer(fileData);
+    // オーディオデータとしてパースする
+    const audioData = await decodeAudioFromArrayBuffer(arrayBuffer);
+    console.log(audioData);
   };
 
   return <Container>
@@ -49,7 +70,7 @@ const App: React.FC = () => {
             <Form.File ref={fileInput} label="音楽ファイルを選択してください。" onChange={readFile} />
           </Form.Group>
           <Form.Group>
-            <Button onClick={startAnalysis}>解析開始</Button>
+            <Button disabled={fileData === null} onClick={startAnalysis}>解析開始</Button>
           </Form.Group>
         </Form>
       </Col>
