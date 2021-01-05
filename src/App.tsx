@@ -20,7 +20,7 @@ const readFileAsArrayBuffer = (file: File): Promise<ArrayBuffer> => {
 
 const decodeAudioFromArrayBuffer = (arrayBuffer: ArrayBuffer): Promise<AudioBuffer> => {
   return new Promise((res) => {
-    const audioContext = new AudioContext();
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     audioContext.decodeAudioData(arrayBuffer, (decodedData) => {
       res(decodedData);
     });
