@@ -40,7 +40,7 @@ const calcSignalLfilter = (b: number[], a: number[], data: Float32Array): Float3
     for (let n = 1; n < a.length; n += 1) {
       const j = i - n;
       if (j >= 0) {
-        sum -= a[n] * data[i - n];
+        sum -= a[n] * outputData[i - n];
       }
     }
     outputData[i] = sum / a[0];
