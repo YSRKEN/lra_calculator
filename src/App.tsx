@@ -80,6 +80,10 @@ const calcLRA = (pcmDataL: Float32Array, pcmDataR: Float32Array, samplingRate: n
   alpha = Math.sin(w0) / (2.0 * 0.5);
   const b2 = [(1 + Math.cos(w0)) / 2, -(1 + Math.cos(w0)), (1 + Math.cos(w0)) / 2];
   const a2 = [1 + alpha, -2 * Math.cos(w0), 1 - alpha];
+  console.log(`サンプリングレート：${samplingRate}[Hz]`);
+  console.log(`データ長：${pcmDataL.length}`);
+  console.log(`パラメーター：`);
+  console.log(`　a1=${a1}, a2=${a2}, b1=${b1}, b2=${b2}`);
 
   const pcmDataL2 = calcSignalLfilter(b1, a1, pcmDataL);
   const pcmDataR2 = calcSignalLfilter(b1, a1, pcmDataR);
@@ -103,13 +107,15 @@ const calcLRA = (pcmDataL: Float32Array, pcmDataR: Float32Array, samplingRate: n
   // power to loudness
   // 0.691 is a magic number for regularization
   stl = stl.map(s => Math.log10(s) * 10 - 0.691);
+  console.log(`　shift=${shift}, calcRange=${calcRange}, N=${N}`);
 
   // gating
   const absoluteThreshold = -70;
   stl = stl.filter(s => s > absoluteThreshold);
-  const I = Math.log10(arraySum(stl.map(s => Math.pow(10.0, s / 10)))) * 10 / stl.length;
+  const I = Math.log10(arraySum(stl.map(s => Math.pow(10.0, s / 10))) / stl.length) * 10;
   const relativeThreshold = I - 20;
   stl = stl.filter(s => s > relativeThreshold);
+  console.log(`　absoluteThreshold=${absoluteThreshold}, I=${I}, relativeThreshold=${relativeThreshold}`);
 
   // output
   stl.sort();
@@ -118,6 +124,7 @@ const calcLRA = (pcmDataL: Float32Array, pcmDataR: Float32Array, samplingRate: n
 
 const App: React.FC = () => {
   const [fileData, setFileData] = useState<File | null>(null);
+  const [lra, setLRA] = useState('');
   const fileInput = useRef<HTMLInputElement>(null);
 
   const readFile = (e: FormEvent<HTMLInputElement>) => {
@@ -144,7 +151,7 @@ const App: React.FC = () => {
     // オーディオデータとしてパースする
     const audioData = await decodeAudioFromArrayBuffer(arrayBuffer);
     // LRAを計算する
-    console.log(`LRA：${calcLRA(audioData.getChannelData(0), audioData.getChannelData(1), audioData.sampleRate)}[LU]`);
+    setLRA(`LRA：${calcLRA(audioData.getChannelData(0), audioData.getChannelData(1), audioData.sampleRate)}[LU]`);
   };
 
   return <Container>
@@ -161,6 +168,9 @@ const App: React.FC = () => {
           </Form.Group>
           <Form.Group>
             <Button disabled={fileData === null} onClick={startAnalysis}>解析開始</Button>
+          </Form.Group>
+          <Form.Group>
+            <Form.Label>{lra}</Form.Label>
           </Form.Group>
         </Form>
       </Col>
