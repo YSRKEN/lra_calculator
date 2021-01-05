@@ -118,7 +118,13 @@ const calcLRA = (pcmDataL: Float32Array, pcmDataR: Float32Array, samplingRate: n
   console.log(`　absoluteThreshold=${absoluteThreshold}, I=${I}, relativeThreshold=${relativeThreshold}`);
 
   // output
-  stl.sort();
+  stl.sort((a: number, b: number) => {
+    if (a < b) return -1;
+    if (a > b) return 1;
+    return 0;
+  });
+  console.log(stl.length);
+  console.log(stl);
   return stl[Math.floor(stl.length * 0.95)] - stl[Math.floor(stl.length * 0.10)];
 };
 
