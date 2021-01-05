@@ -132,7 +132,7 @@ const App: React.FC = () => {
   const [fileData, setFileData] = useState<File | null>(null);
   const [lra, setLRA] = useState('');
   const [loadingFlg, setLoadingFlg] = useState(false);
-  const [tweetText, setTweetText] = useState('');
+  const [tweetUrl, setTweetUrl] = useState('');
   const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -142,11 +142,13 @@ const App: React.FC = () => {
   }, [lra]);
 
   useEffect(() => {
+    let text = '';
     if (lra !== '' && fileData !== null) {
-      setTweetText(`LRA計算アプリ\nファイル名：${fileData.name}\n${lra}\n`);
+      text = `【LRA計算アプリ】%0a「${fileData.name}」の${lra.replace('LRA', 'ラウドネスレンジ')}%0a`;
     } else {
-      setTweetText('LRA計算アプリ\n音楽ファイルのラウドネスレンジを計算できます！\n');
+      text = '【LRA計算アプリ】%0a音楽ファイルのラウドネスレンジを計算できます%0a';
     }
+    setTweetUrl(`https://twitter.com/intent/tweet?text=${text}&url=https://lra-calculator.web.app/`);
   }, [lra, fileData]);
 
   const readFile = (e: FormEvent<HTMLInputElement>) => {
@@ -193,12 +195,7 @@ const App: React.FC = () => {
         <span>　</span>
         <a href="https://twitter.com/YSRKEN">作者のTwitter</a>
         <span>　</span>
-        <a
-          href="https://twitter.com/share"
-          className="twitter-share-button"
-          data-text={tweetText}
-          data-url="https://lra-calculator.web.app/"
-          data-lang="ja">Tweet</a>
+        <a className="btn btn-primary btn-sm" role="button" href={tweetUrl} target="_blank" rel="noopener noreferrer">Tweet</a>
       </Col>
     </Row>
     <Row className="my-3">
