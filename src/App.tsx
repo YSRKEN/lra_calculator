@@ -132,6 +132,7 @@ const App: React.FC = () => {
   const [fileData, setFileData] = useState<File | null>(null);
   const [lra, setLRA] = useState('');
   const [loadingFlg, setLoadingFlg] = useState(false);
+  const [tweetText, setTweetText] = useState('');
   const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -139,6 +140,14 @@ const App: React.FC = () => {
       setLoadingFlg(false);
     }
   }, [lra]);
+
+  useEffect(() => {
+    if (lra !== '' && fileData !== null) {
+      setTweetText(`LRA計算アプリ\nファイル名：${fileData.name}\n${lra}\n`);
+    } else {
+      setTweetText('LRA計算アプリ\n音楽ファイルのラウドネスレンジを計算できます！\n');
+    }
+  }, [lra, fileData]);
 
   const readFile = (e: FormEvent<HTMLInputElement>) => {
     e.preventDefault();
@@ -168,7 +177,8 @@ const App: React.FC = () => {
     // オーディオデータとしてパースする
     const audioData = await decodeAudioFromArrayBuffer(arrayBuffer);
     // LRAを計算する
-    setLRA(`LRA：${calcLRA(audioData.getChannelData(0), audioData.getChannelData(1), audioData.sampleRate)}[LU]`);
+    const lra = calcLRA(audioData.getChannelData(0), audioData.getChannelData(1), audioData.sampleRate);
+    setLRA(`LRA：${Math.round(lra * 10.0) / 10.0}[LU]`);
   };
 
   return <Container>
@@ -182,6 +192,13 @@ const App: React.FC = () => {
         <a href="https://github.com/YSRKEN/lra_calculator/tree/develop">GitHub</a>
         <span>　</span>
         <a href="https://twitter.com/YSRKEN">作者のTwitter</a>
+        <span>　</span>
+        <a
+          href="https://twitter.com/share"
+          className="twitter-share-button"
+          data-text={tweetText}
+          data-url="https://lra-calculator.web.app/"
+          data-lang="ja">Tweet</a>
       </Col>
     </Row>
     <Row className="my-3">
@@ -201,7 +218,7 @@ const App: React.FC = () => {
         </Form>
       </Col>
     </Row>
-  </Container>;
+  </Container >;
 };
 
 export default App;
